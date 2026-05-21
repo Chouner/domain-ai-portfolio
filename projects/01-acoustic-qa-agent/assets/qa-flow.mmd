@@ -1,0 +1,8 @@
+flowchart TD
+    A[User question] --> B[Intent classification]
+    B --> C{Question type}
+    C -->|Concept or product basics| D[Knowledge retrieval]
+    C -->|Pricing or custom deployment| E[Human handoff]
+    D --> F[Answer generation]
+    F --> G[Source and boundary check]
+

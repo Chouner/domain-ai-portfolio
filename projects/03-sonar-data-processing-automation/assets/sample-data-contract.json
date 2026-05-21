@@ -1,0 +1,7 @@
+{
+  "data_type": "echosounder_csv",
+  "required_fields": ["ping_id", "depth", "sv"],
+  "task_goal": "nasc_calculation",
+  "public_version": true
+}
+
