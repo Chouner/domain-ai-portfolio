@@ -1,0 +1,354 @@
+# 项目步骤
+## 第一步：盘点数据——几种生物、几张图、图像质量分布
+## 第二步：定结构化模板——知识库条目长什么样
+## 第三步：划分测试集——先锁住，不参与建库
+## 第四步：爬取+整理知识库
+## 第五步：搭RAG系统
+## 第六步：跑测试集，输出结果+解读
+
+# 第一步结果
+详见表格marine_image_inventory.xlsx、marine_image_inventory_by_species.xls、marine_image_inventory_per_image.xls
+收集现场捕捞图像数据共 9,019 张，涵盖 109 个物种（按文件夹归类），图像以 .jpg 为主，少量 .bmp 和 .png。
+图像质量分布：高质量 86.8%，中等质量 6.2%，低质量 7%，不可读 0.01%（1张）。
+图像分辨率差异显著，平均宽度约 4,000–8,000 px，说明拍摄设备和场景不统一。
+数据整理工作包括按物种命名归档、质量分级标注，以及生成物种清单，作为后续知识库构建的基础。
+
+#第二步 结构化模板
+## 1、物种描述
+每个物种建立一个结构化记录，推荐保存为 `species_profile.jsonl`，一行一个物种。
+
+```json
+{
+  "species_id": "",
+  "accepted_scientific_name": "",
+  "chinese_name": "",
+  "scientific_name_authority": "",
+  "synonyms": [],
+  "taxonomy": {
+    "order": "",
+    "family": "",
+    "genus": "",
+    "worms_aphia_id": "",
+    "fishbase_species_id": ""
+  },
+  "body_features": {
+    "standard_length_range": "",
+    "total_length_range": "",
+    "body_depth_ratio": "",
+    "body_shape": "",
+    "diagnostic_summary": ""
+  },
+  "head_features": {
+    "snout": "",
+    "eye": "",
+    "mouth": "",
+    "jaw": "",
+    "teeth": "",
+    "gill_cover": ""
+  },
+  "scales_lateral_line": {
+    "scale_type": "",
+    "scale_status": "",
+    "lateral_line": "",
+    "lateral_line_scale_count": "",
+    "other_counts": ""
+  },
+  "fins": {
+    "dorsal_fin": "",
+    "anal_fin": "",
+    "pectoral_fin": "",
+    "pelvic_fin": "",
+    "caudal_fin": "",
+    "adipose_fin": "",
+    "fin_ray_formula": ""
+  },
+  "photophores": {
+    "presence": "",
+    "distribution": "",
+    "counts": "",
+    "sexual_dimorphism": "",
+    "diagnostic_pattern": ""
+  },
+  "coloration": {
+    "live": "",
+    "preserved": "",
+    "marks": ""
+  },
+  "range_depth": {
+    "geographic_range": "",
+    "habitat": "",
+    "depth_range_m": "",
+    "vertical_migration": ""
+  },
+  "visual_assets": {
+    "local_image_paths": [],
+    "reference_image_urls": [],
+    "clip_embedding_ids": []
+  },
+  "sources": [
+    {
+      "source_name": "",
+      "url_or_citation": "",
+      "source_type": "FishBase/WoRMS/FAO/paper/local_document/manual_review",
+      "retrieved_date": "",
+      "fields_supported": []
+    }
+  ],
+  "confidence": {
+    "taxonomy": "high/medium/low",
+    "morphology": "high/medium/low",
+    "visual_reference": "high/medium/low"
+  },
+  "notes": ""
+}
+```
+
+面向人工录入/审核时，可展开成表格字段：
+
+| 字段 | 子字段 | 说明 |
+|---|---|---|
+| 物种名 | 中文名、接受学名、命名人、同物异名 | 学名以 WoRMS/FishBase 接受名为准 |
+| 体型特征 | 体长范围、体高比、体形描述 | 区分标准长、全长；保留原文单位 |
+| 头部特征 | 吻、眼、口、颌、齿 | 能从照片判断的字段单独标记 |
+| 鳞片与侧线 | 鳞型、鳞片状态、侧线、侧线鳞数 | 深海鱼常有脱鳞，需标注标本状态 |
+| 鳍型 | 背鳍、臀鳍、胸鳍、腹鳍、尾鳍、脂鳍、鳍条公式 | 鳍条数作为强识别特征 |
+| 发光器分布 | 位置、数量、雌雄差异、诊断性排列 | 灯笼鱼、巨口鱼等深海类群的核心字段 |
+| 体色 | 活体、标本、斑纹 | 活体色和固定标本色分开 |
+| 活动范围与水深 | 地理范围、栖息环境、水深、昼夜垂直迁移 | 用于缩小候选种 |
+| 来源与置信度 | 文献/API/网页、本地图片、审核状态 | 每个字段都应可追溯 |
+
+## 2、权威资料源
+优先级建议：
+
+1. 原始分类论文、修订论文、区域鱼类志、FAO Species Identification Guide。
+2. FishBase：物种概要、形态表、生态/分布/深度、参考文献。
+3. WoRMS：接受学名、同物异名、分类地位、AphiaID。
+4. OBIS/GBIF：分布记录，只作为范围辅助，不直接当形态依据。
+5. 本地专家整理文档和实拍图片：作为项目内证据，但要和外部权威资料交叉校验。
+
+字段抽取策略：
+
+- 学名和同物异名：先用 WoRMS 归一化，再映射 FishBase。
+- 鳍条数、体长、体高比、发光器：优先分类论文/FAO/FishBase morphology。
+- 水深和范围：FishBase + OBIS/GBIF + 文献。
+- 中文名：本地目录名、FishBase common names、国内鱼类志交叉整理。
+
+## 3、知识库设计
+推荐同时建设三类库：
+
+### 3.1 结构化物种库
+
+存储：SQLite/PostgreSQL + JSON 字段，或 `species_profile.jsonl` 起步。
+
+用途：
+
+- 精确过滤候选：科属、水深、地理区域、鳍条范围、发光器模式。
+- 输出标准化识别报告。
+- 支持字段级审核和来源追溯。
+
+### 3.2 文本 RAG 库
+
+存储：Chroma / Milvus / Qdrant。
+
+文档块类型：
+
+- `species_profile_full`：每个物种完整结构化描述转成自然语言。
+- `diagnostic_features`：只包含鉴别特征。
+- `source_excerpt`：带来源的短文本证据。
+- `comparison_pair`：相似种差异，如“粗短灯笼鱼 vs 短颌灯笼鱼”。
+
+检索字段：
+
+- `species_id`
+- `scientific_name`
+- `chinese_name`
+- `family`
+- `source_type`
+- `field`
+- `confidence`
+
+### 3.3 视觉向量库
+
+存储：CLIP/SigLIP 图像 embedding + 元数据。
+
+每张图片保存：
+
+- 图片路径、所属物种、拍摄/标本状态。
+- 图片质量等级。
+- CLIP embedding。
+- 视觉模型抽取的形态字段。
+- 可见部位标记：侧面、背面、腹面、头部、发光器、鳍条是否清晰。
+
+# 第三步：识别流程设计
+输入：目标鱼图片，可选采集海域、水深、样本尺寸、拍摄角度。
+
+### 阶段 A：图像预处理
+
+1. 图像质量检查：分辨率、模糊、曝光、主体占比。
+2. 目标分割：去背景，定位鱼体。
+3. 姿态判断：侧面/背面/腹面/头部特写。
+4. 可见字段判断：哪些字段可从图像判断，哪些不可见。
+
+### 阶段 B：视觉候选召回
+
+1. 用 CLIP/SigLIP 提取图像向量。
+2. 在本地视觉库中召回 Top 50 相似图片。
+3. 按物种聚合，得到 Top 20 候选物种。
+4. 用质量、角度、同科同属权重重排。
+
+### 阶段 C：视觉模型字段抽取
+
+让多模态模型按统一模板输出，不允许编造不可见字段：
+
+```json
+{
+  "visible_features": {
+    "body_shape": {"value": "", "confidence": 0.0, "evidence": ""},
+    "head": {"value": "", "confidence": 0.0, "evidence": ""},
+    "fins": {"value": "", "confidence": 0.0, "evidence": ""},
+    "photophores": {"value": "", "confidence": 0.0, "evidence": ""},
+    "coloration": {"value": "", "confidence": 0.0, "evidence": ""}
+  },
+  "not_visible": [],
+  "image_quality_notes": ""
+}
+```
+
+### 阶段 D：结构化过滤
+
+如果用户提供采样信息：
+
+- 海域不符的物种降权。
+- 水深范围不重叠的物种降权。
+- 体长明显不符的物种降权。
+- 科属已知时直接过滤。
+
+### 阶段 E：RAG 证据校验
+
+对 Top 10 候选物种检索：
+
+- 诊断特征。
+- 鳍条/发光器/体形关键字段。
+- 相似种差异。
+- 分布水深证据。
+
+然后由大模型生成结构化判别：
+
+```json
+{
+  "top_candidates": [
+    {
+      "species": "",
+      "scientific_name": "",
+      "score": 0.0,
+      "supporting_evidence": [],
+      "contradicting_evidence": [],
+      "missing_observations": []
+    }
+  ],
+  "recommended_identification": "",
+  "confidence": "high/medium/low",
+  "needs_manual_check": true,
+  "manual_check_items": []
+}
+```
+
+### 阶段 F：输出识别报告
+
+输出格式：
+
+- 推荐物种：中文名 + 学名。
+- 置信度：高/中/低。
+- 关键支持证据：体形、头部、鳍型、发光器、体色、水深。
+- 排除相似种的理由。
+- 需要人工复核的字段。
+- 引用来源。
+
+# 第四步：模型与技术选型
+### 最小可用版
+
+- 向量库：Chroma。
+- 文本 embedding：`text-embedding-v4` 或 `bge-m3`。
+- 图像 embedding：OpenCLIP/SigLIP。
+- 视觉模型：Qwen-VL、GPT-4o/4.1/5 系列视觉模型、Gemini Vision 等任选。
+- 文本生成：Qwen-Max、GPT、DeepSeek 等。
+- 前端：Gradio。
+
+### 稳定生产版
+
+- 图像库：Milvus/Qdrant，支持批量图片向量和过滤。
+- 文本库：PostgreSQL + pgvector 或 Qdrant。
+- 结构化库：PostgreSQL。
+- OCR/文档解析：docling、unstructured、python-docx、PyMuPDF。
+- 任务编排：Prefect/Airflow。
+- 标注审核：Label Studio 或自建 Streamlit/Gradio 审核台。
+
+## 7. 推荐目录结构
+
+```text
+marine_species_id/
+  data/
+    raw_sources/
+    species_profile.jsonl
+    image_inventory.csv
+    source_registry.csv
+  kb/
+    chroma_text/
+    clip_image_index/
+  scripts/
+    ingest_sources.py
+    normalize_taxonomy.py
+    build_species_profiles.py
+    embed_text_kb.py
+    embed_image_kb.py
+    identify_species.py
+  app/
+    web_interface.py
+  reports/
+    identification_cases/
+```
+
+## 8. 实施顺序
+
+1. 用已有 `marine_image_inventory_by_species.csv` 确定目标物种清单。
+2. 对每个物种做 WoRMS/FishBase 学名归一化。
+3. 批量抓取公开资料，建立 `source_registry.csv`。
+4. 用大模型抽取字段，但每个字段保留来源和置信度。
+5. 人工抽查高频物种和相似物种。
+6. 对本地 9019 张图生成 CLIP embedding。
+7. 建立文本 RAG 库和视觉向量库。
+8. 实现“CLIP 召回 + 结构化过滤 + RAG 解释”的识别接口。
+9. 用已知标签图片做 Top-1 / Top-5 / 同属准确率评估。
+10. 针对错分高的类群建立相似种对比知识块。
+
+## 9. 评估指标
+
+- Top-1 物种准确率。
+- Top-5 命中率。
+- 科/属级准确率。
+- 低质量图片下的鲁棒性。
+- 相似种错分矩阵。
+- RAG 引用命中率：输出证据是否来自正确来源。
+- 字段抽取完整率：模板字段填充比例。
+- 人工复核通过率。
+
+## 10. 关键提示词
+
+视觉字段抽取提示词：
+
+```text
+你是鱼类形态学识别助手。请只根据图片中可见证据填写字段。
+不要根据物种常识补全图片中不可见的内容。
+如果鳍条数、侧线鳞数、发光器数量无法准确数出，写“不可判定”，并说明原因。
+请按 JSON 输出：体型、头部、鳞片与侧线、鳍型、发光器、体色、可见性、置信度。
+```
+
+最终识别提示词：
+
+```text
+根据候选物种的视觉相似度、结构化形态字段、采集水深/海域、RAG 检索证据，判断最可能物种。
+必须列出支持证据、反证、相似种排除理由。
+不能把没有来源的模型猜测写成事实。
+置信度低时，给出需要补拍或人工复核的字段。
+```
+
