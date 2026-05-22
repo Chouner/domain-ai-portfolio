@@ -11,7 +11,7 @@
 
 ### step6 根据步骤搭建pipeline，并整理测试机，设计指标
 
-### step7 实际开发，制作测试集，记录测试结果
+### step7 安装 chromadb/open-clip-torch、构建 CLIP/Chroma 索引，也没有调用 Qwen API 跑，制作测试集，记录测试结果
 
 ### step8 对测试结果进行评估，记录问题和改进方向
 
