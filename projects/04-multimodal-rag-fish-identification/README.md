@@ -1,30 +1,43 @@
 # Multimodal RAG Fish Identification / 多模态 RAG 鱼类识别
 
-## One-line Summary / 一句话概述
+**项目名称**
+基于多模态RAG的深海鱼类智能识别系统
 
-A multimodal RAG workflow for deep-sea fish identification under small-sample, low-quality image conditions.
+**背景与问题**
+深海鱼类捕捞后拍照上岸，无法自动识别种类。尝试了YOLO（传统分类模型）和CLIP（小样本方法），在几千种生物、样本稀少、图像质量差的条件下，准确率只有20%，不可用。
 
-一个面向小样本、低质量图像条件下深海鱼类识别的多模态 RAG 工作流。
+**核心挑战**
+种类多（几千种）、样本少、图像质量差、长尾分布——这三个条件叠加，导致端到端分类模型天花板很低。
 
-## Core Problem / 核心问题
+**方案转变逻辑**
+放弃"训练一个分类器"的思路，改为"构建知识库+检索匹配"——用视觉模型对图像做结构化文本描述，把专家知识整理成图像+描述的知识库，用同样结构去做一致性比对，相似度超过阈值则认定种类。
 
-Deep-sea fish images often have low quality, limited samples, and many visually similar species. Pure image classification methods such as YOLO/CLIP performed poorly in early trials.
+**技术实现**
+- 用Qwen3-VL-Plus做图像理解，输出结构化描述
+- 设计语义聚合算法，把880个碎片文本块重构为90个完整知识单元，解决上下文割裂
+- 用Chroma构建本地检索，余弦相似度匹配，TopK=1
+- Qwen3-Max生成专家级回答
+- Gradio搭建前端交互界面
+- 技术栈：Python / LangChain / Chroma / DashScope API
 
-深海鱼类图像通常质量较低、样本有限，且相似物种较多。早期试验中，纯图像分类方法如 YOLO/CLIP 表现不佳。
+**验证结果**
+- 100张不同生物图片：正确率80%（对比基线20%，提升4倍）
+- 同一张图片跑10次：6次结果一致，2次无法识别，2次提示知识库缺少对应条目
 
-## Core Innovation / 核心创新
+**结果解读（现在缺的部分）**
+- 80%在这个场景下意味着什么？是否达到可用标准？
+- 2次无法识别的原因是什么？
+- 2次知识库缺失说明覆盖度问题，不是方案缺陷
 
-Reframe fish identification from pure visual classification into image understanding -> species knowledge retrieval -> expert-style reasoning answer.
+**下一步（现在缺的部分）**
+- 扩充知识库覆盖度
+- 优化无法识别时的兜底逻辑
+- 提升一致性稳定性
 
-将鱼类识别从纯视觉分类问题，重构为图像理解 -> 物种知识检索 -> 专家式推理回答。
+---
 
-## Tech Stack / 技术栈
+现在问你几个问题，补缺失的部分：
 
-- Python / Python
-- LangChain / LangChain
-- Chroma / Chroma
-- DashScope API / DashScope API
-- Qwen3-VL-Plus / Qwen3-VL-Plus
-- Qwen3-Max / Qwen3-Max
-- text-embedding-v4 / text-embedding-v4
-
+1. 这个项目最终交付状态是什么——原型Demo、还是真的给人用了？
+2. 80%这个结果，你自己觉得够不够用，为什么？
+3. 2次无法识别，你排查过原因吗？
