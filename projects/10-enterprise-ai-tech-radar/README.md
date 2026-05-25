@@ -1,26 +1,51 @@
-# Enterprise AI Tech Radar / 企业 AI 技术雷达
+# Enterprise AI Tech Radar
 
-## One-line Summary / 一句话概述
+## One-line Summary
 
-A technical reserve system for tracking, judging, and structuring emerging AI technologies for enterprise use.
+A scheduled technology-reserve workflow that collects AI/acoustic research, structures it into reviewable technical cards, and feeds useful techniques back into algorithm development.
 
-一个用于跟踪、判断和结构化新兴 AI 技术的企业技术储备系统。
+## Core Problem
 
-## Core Problem / 核心问题
+Fast-moving AI and acoustic technologies are easy to collect but hard to use. Without a structured reserve, new papers and repositories remain scattered notes and cannot help real engineering decisions.
 
-Companies need to follow fast-moving AI technologies, but manual tracking is fragmented, unstructured, and difficult to turn into actionable technical reserves.
+## Workflow
 
-企业需要跟进快速变化的 AI 技术，但人工跟踪往往碎片化、非结构化，难以转化为可执行的技术储备。
+```mermaid
+flowchart TD
+    A["Scheduled sources"] --> B["Hermes / OpenClaw collection"]
+    B --> C["Source item normalization"]
+    C --> D["Technical classification"]
+    D --> E["Tech card"]
+    E --> F["Feasibility report"]
+    F --> G["Human review"]
+    G --> H["Technical reserve"]
+    H --> I["Algorithm failure retrieval"]
+    I --> J["Exploration test"]
+    J --> K["Adopt / reserve / retry / reject"]
+```
 
-## Core Innovation / 核心创新
+## Stored Objects
 
-Build a workflow for automatic technology collection, classification, structured storage, and future task decomposition.
+| Object | Purpose |
+|---|---|
+| `source_items` | Raw normalized evidence from papers, repositories, manuals, forums, and internal notes |
+| `tech_cards` | Decision-ready structured cards with scenario fit, maturity, evidence strength, requirements, and risks |
+| `feasibility_reports` | Experiment-facing reports with validation plans, expected effort, integration risk, and recommendation |
+| `review_tasks` | Human review queue for uncertain or high-impact decisions |
 
-构建自动技术收集、分类、结构化存储和后续任务拆解的工作流。
+## Metrics
 
-## Current Status / 当前状态
+| Metric | Formula |
+|---|---|
+| Daily valid item count | accepted source items per scheduled run |
+| Duplicate rate | `duplicate_items / collected_items` |
+| Extraction completeness | `filled_required_fields / required_fields` |
+| Review acceptance rate | `accepted_cards / reviewed_cards` |
+| Retrieval precision@K | `relevant_candidates_in_top_k / k` |
+| Experiment conversion rate | `experiments_started / retrieved_candidates` |
+| Technique win rate | `accepted_techniques / tested_techniques` |
+| Failure recovery latency | `report_time - failure_detected_time` |
 
-Architecture design and basic task framing are included. This is not claimed as a mature production system.
+## Current Status
 
-当前包含架构设计与基础任务框架，不声明为成熟生产系统。
-
+Architecture and measurement design are complete. The project is presented as a technology-reserve and decision-workflow design, not as a mature production intelligence platform.

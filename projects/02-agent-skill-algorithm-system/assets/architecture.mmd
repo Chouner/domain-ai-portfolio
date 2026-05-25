@@ -1,8 +1,16 @@
 flowchart TD
-    A[User Request] --> B[Agent Planner]
-    B --> C[Skill Registry]
-    C --> D[Input Contract Check]
-    D --> E[Algorithm Skill]
-    E --> F[Validation Layer]
-    F --> G[Report]
-
+    A["User task"] --> B["Agent planner"]
+    B --> C["Skill registry"]
+    C --> D["Contract checker"]
+    D --> E["Algorithm Skill"]
+    E --> F["Validation layer"]
+    F --> G{"Pass threshold?"}
+    G -- "Yes" --> H["Module registration"]
+    G -- "No" --> I["Failure signature"]
+    I --> J["Technical reserve retrieval"]
+    J --> K["Exploration test"]
+    K --> F
+    L["Hermes / OpenClaw scheduled research"] --> M["Source items"]
+    M --> N["Tech cards"]
+    N --> O["Feasibility reports"]
+    O --> J

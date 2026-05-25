@@ -1,7 +1,12 @@
 flowchart TD
-    A[Technology Sources] --> B[Collection]
-    B --> C[Classification]
-    C --> D[Scoring]
-    D --> E[Technical Reserve]
-    E --> F[Task Decomposition]
-
+    A["AI / acoustic sources"] --> B["Hermes / OpenClaw scheduled collection"]
+    B --> C["Source items"]
+    C --> D["Classification"]
+    D --> E["Scoring"]
+    E --> F["Tech cards"]
+    F --> G["Feasibility reports"]
+    G --> H["Human review"]
+    H --> I["Technical reserve"]
+    I --> J["Failure-driven retrieval"]
+    J --> K["Exploration test"]
+    K --> L["Adopt / reserve / retry / reject"]

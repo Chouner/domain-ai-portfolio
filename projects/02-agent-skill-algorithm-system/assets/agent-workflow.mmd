@@ -1,7 +1,13 @@
 flowchart TD
-    A[Request] --> B[Decompose]
-    B --> C[Retrieve Skill]
-    C --> D[Check Contract]
-    D --> E[Execute]
-    E --> F[Validate]
-
+    A["Request"] --> B["Decompose"]
+    B --> C["Detect data profile"]
+    C --> D["Retrieve Skill"]
+    D --> E["Check contract"]
+    E --> F["Confirm parameters"]
+    F --> G["Execute module"]
+    G --> H["Validate"]
+    H --> I{"Pass?"}
+    I -- "Yes" --> J["Report + register"]
+    I -- "No" --> K["Retrieve reserve"]
+    K --> L["Experiment plan"]
+    L --> G
