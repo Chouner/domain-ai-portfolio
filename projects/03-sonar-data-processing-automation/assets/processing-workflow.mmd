@@ -1,7 +1,14 @@
 flowchart TD
-    A[Data Profile] --> B[Task Goal]
-    B --> C[Module Selection]
-    C --> D[Parameter Confirmation]
-    D --> E[Processing]
-    E --> F[Validation]
-
+    A["EK80 / EK60 raw"] --> B["Unified parser"]
+    B --> C["Sv / TS / GPS artifacts"]
+    C --> D["Data profile"]
+    D --> E["Agent module planning"]
+    E --> F["Algorithm Skill execution"]
+    F --> G["Validation"]
+    G --> H{"Pass?"}
+    H -- "Yes" --> I["Visualization + report"]
+    H -- "No" --> J["AI pre-review"]
+    J --> K["Human review"]
+    K --> L["Research reserve retrieval"]
+    L --> E
+    I --> M["Feishu delivery"]
