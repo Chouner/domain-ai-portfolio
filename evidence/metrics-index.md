@@ -24,3 +24,10 @@
 | Sonar Automation | Sv p95 absolute difference | 0.0038 dB | Public | Echoview-style comparison |
 | Tech Radar | Core stored objects | 4 | Public | source_items, tech_cards, feasibility_reports, review_tasks |
 | Tech Radar | Evaluation dimensions | 7 | Public | scoring model |
+| Ultrasonic Positioning | Validation raw receiver records | 9,836 | Public | Two-hour field slice |
+| Ultrasonic Positioning | Validation depth records | 3,276 | Public | Layer 3 / C++ output |
+| Ultrasonic Positioning | Validation TDOA grouping records | 2,644 | Public | Step B output |
+| Ultrasonic Positioning | Python localization outputs | 491 | Public | Step C output |
+| Ultrasonic Positioning | C++ localization outputs | 510 | Public | C++ Step C output |
+| Ultrasonic Positioning | Field CSV files reviewed | 6,300 | Public | Yichang field project |
+| Ultrasonic Positioning | Field visual artifacts | 992 | Public | HTML / PNG / GIF outputs |
